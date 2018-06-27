@@ -95,13 +95,13 @@ namespace signalR
         std::future<void> send(const std::string& method_name, const T&... args);
     };
 
-
     // Allows for users to define custom type serialization/deserialization, example below next to main
     template <typename T>
     rapidjson::Value to_json(T item, rapidjson::MemoryPoolAllocator<>& alloc);
 
     template <typename T>
     T from_json(const rapidjson::Value& item);
+
     class JsonHubProtocol
     {
     public:
@@ -112,6 +112,9 @@ namespace signalR
         std::string write_message(const T&... args);
     };
 }
+// end public API, below is example usage
+
+
 
 struct t
 {
