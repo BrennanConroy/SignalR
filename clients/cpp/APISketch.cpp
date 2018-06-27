@@ -34,9 +34,9 @@ namespace signalR
         hub_connection_builder& with_url(const std::string& url, std::function<void(HttpConnectionOptions&)> configure = nullptr);
 
         template <typename Protocol>
-        internal::hub_connection_builder_impl<Protocol> use_protocol(Protocol)
+        _internal::hub_connection_builder_impl<Protocol> use_protocol(Protocol)
         {
-            return internal::hub_connection_builder_impl(*this, Protocol());
+            return _internal::hub_connection_builder_impl(*this, Protocol());
         }
 
         template <typename Protocol>
@@ -46,7 +46,7 @@ namespace signalR
         hub_connection<JsonHubProtocol> build();
     };
 
-    namespace internal
+    namespace _internal
     {
         template <typename Protocol>
         class hub_connection_builder_impl
@@ -60,7 +60,7 @@ namespace signalR
 
             hub_connection<Protocol> build();
         private:
-            hub_connection_builder & mBuilder;
+            hub_connection_builder& mBuilder;
             Protocol mProtocol;
         };
     }
@@ -89,12 +89,19 @@ namespace signalR
         void on(const std::string& name, const std::function<void(T...)>& methodHandler);
 
         template <typename R, typename ...T>
-        std::future<R> invoke(const std::string& method_name, T... args);
+        std::future<R> invoke(const std::string& method_name, const T&... args);
 
         template <typename ...T>
-        std::future<void> send(const std::string& method_name, T... args);
+        std::future<void> send(const std::string& method_name, const T&... args);
     };
 
+
+    // Allows for users to define custom type serialization/deserialization, example below next to main
+    template <typename T>
+    rapidjson::Value to_json(T item, rapidjson::MemoryPoolAllocator<>& alloc);
+
+    template <typename T>
+    T from_json(const rapidjson::Value& item);
     class JsonHubProtocol
     {
     public:
@@ -102,8 +109,37 @@ namespace signalR
         std::tuple<T...> parse_message(const std::string& data) const;
 
         template <typename ...T>
-        std::string write_message(T... args);
+        std::string write_message(const T&... args);
     };
+}
+
+struct t
+{
+    bool b;
+};
+
+// add 'custom' type json parsing
+template <>
+t from_json<t>(const rapidjson::Value& item)
+{
+    if (!item.IsBool())
+    {
+        throw std::runtime_error("Could not convert json to type 't'");
+    }
+    return t{ item.GetBool() };
+}
+
+template <>
+rapidjson::Value to_json<>(std::vector<int> item, rapidjson::MemoryPoolAllocator<>& alloc)
+{
+    rapidjson::Value arr(rapidjson::kArrayType);
+
+    for (auto i = 0; i < item.size(); ++i)
+    {
+        arr.PushBack(item[i], alloc);
+    }
+
+    return arr;
 }
 
 int main(void)
