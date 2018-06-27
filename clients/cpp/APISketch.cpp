@@ -118,28 +118,31 @@ struct t
     bool b;
 };
 
-// add 'custom' type json parsing
-template <>
-t from_json<t>(const rapidjson::Value& item)
+namespace signalR
 {
-    if (!item.IsBool())
+    // add 'custom' type json parsing
+    template <>
+    t from_json<t>(const rapidjson::Value& item)
     {
-        throw std::runtime_error("Could not convert json to type 't'");
-    }
-    return t{ item.GetBool() };
-}
-
-template <>
-rapidjson::Value to_json<>(std::vector<int> item, rapidjson::MemoryPoolAllocator<>& alloc)
-{
-    rapidjson::Value arr(rapidjson::kArrayType);
-
-    for (auto i = 0; i < item.size(); ++i)
-    {
-        arr.PushBack(item[i], alloc);
+        if (!item.IsBool())
+        {
+            throw std::runtime_error("Could not convert json to type 't'");
+        }
+        return t{ item.GetBool() };
     }
 
-    return arr;
+    template <>
+    rapidjson::Value to_json<>(std::vector<int> item, rapidjson::MemoryPoolAllocator<>& alloc)
+    {
+        rapidjson::Value arr(rapidjson::kArrayType);
+
+        for (auto i = 0; i < item.size(); ++i)
+        {
+            arr.PushBack(item[i], alloc);
+        }
+
+        return arr;
+    }
 }
 
 int main(void)
